@@ -1,0 +1,21 @@
+{
+
+  "data": [{
+
+    "type": "articles",
+
+    "id": "1",
+
+    "attributes": {
+
+      "title": "JSON API paints my bikeshed!",
+
+      "body": "The shortest article. Ever.",
+
+      "created": null,
+
+      "updated": null
+
+    }}]
+
+}

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cxf="http://camel.apache.org/schema/cxf"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+       xmlns:sec="http://cxf.apache.org/configuration/security"
+       xmlns:http="http://cxf.apache.org/transports/http/configuration"             
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd
+       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://cxf.apache.org/configuration/security http://cxf.apache.org/schemas/configuration/security.xsd
+       http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd       
+       ">
+       <bean id="helloBean" class="com.demo.ihis.rest.RestServiceImpl" />
+       
+  <!-- Defined the server endpoint to create the cxf-rs consumer -->
+  <cxf:rsServer id="rsServer" address="http://localhost:8182"    
+    loggingFeatureEnabled="true" loggingSizeLimit="20" skipFaultLogging="true">
+ <cxf:serviceBeans>
+     <ref bean="helloBean" />
+  </cxf:serviceBeans>    
+      <cxf:providers>
+     <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider" />
+  </cxf:providers>
+  </cxf:rsServer>
+ 
+ <!-- backend server                   -->
+<cxf:cxfEndpoint id="soapMessageEndpoint"
+                 serviceClass="com.demo.ihis.ws.BackEndWebService"
+                 address="https://localhost:8443/cxf/test"/> 
+
+<http:conduit name="*.http-conduit">
+    <http:tlsClientParameters disableCNCheck="true">
+      <sec:keyManagers keyPassword="password">
+          <sec:keyStore password="password" type="JKS"
+          resource="certs/client.ts" />
+      </sec:keyManagers>
+      
+      <sec:trustManagers>
+          <sec:keyStore password="password" type="JKS"
+          resource="certs/client.ts" />
+      </sec:trustManagers>
+      <sec:cipherSuitesFilter>
+        <sec:include>.*_WITH_3DES_.*</sec:include>
+        <sec:include>.*_WITH_DES_.*</sec:include>
+        <sec:exclude>.*_WITH_NULL_.*</sec:exclude>
+        <sec:exclude>.*_DH_anon_.*</sec:exclude>
+      </sec:cipherSuitesFilter>
+    </http:tlsClientParameters>
+   </http:conduit>       
+<bean id="testBean" class="com.demo.ihis.ws.ProcessBean"/> 
+ <camelContext xmlns="http://camel.apache.org/schema/spring">
+  <endpoint uri="dozer:json_xml?sourceModel=inputa.Inputa&amp;targetModel=generated.Output&amp;marshalId=generated&amp;unmarshalId=inputaInputa&amp;mappingFile=transformation.xml" id="json_xml"/>
+  <dataFormats>
+    <json library="Jackson" unmarshalTypeName="inputa.Inputa" id="inputaInputa"/>
+    <jaxb contextPath="generated" id="generated"/>
+  </dataFormats>
+  <route>
+    <from uri="cxfrs://bean://rsServer"/>
+    <to uri="log:body?level=INFO"/>
+    <log message="${headers}"/>
+    <log message="============="/>
+    <to ref="json_xml"/>
+    <removeHeaders pattern="org.apache.cxf.request*"/>
+    <removeHeaders pattern="operationName"/>
+    <log message="${headers}"/>
+    <log message="============="/>
+		      <to uri="bean:testBean?method=convert"/>
+    
+    <to uri="cxf:bean:soapMessageEndpoint" />    
+<!--     <to uri="direct:convert"/>
+ -->  </route>
+  <route>
+    <from uri="direct:convert"/>
+    <log message="============="/>
+    <log message="${body}"/>
+    <log message="=============Call backend============="/>
+
+
+  </route>
+</camelContext>
+
+</beans>

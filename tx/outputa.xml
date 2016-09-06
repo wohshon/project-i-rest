@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<output>
+	<data>
+		<type>articles</type>
+		<id>1</id>
+		<attributes>
+			<title>JSON API paints my bikeshed!</title>
+			<body>The shortest article. Ever.</body>
+			<created></created>
+			<updated></updated>
+		</attributes>
+		<relationships>
+			<author>
+				<author_data>
+					<id>42</id>
+					<type>people</type>
+				</author_data>
+			</author>
+		</relationships>
+	</data>
+	<included>
+		<type>people</type>
+		<id>42</id>
+		<attributes>
+			<name>John</name>
+			<age>80</age>
+			<gender>male</gender>
+		</attributes>
+	</included>
+	
+</output>
