@@ -25,7 +25,14 @@
      <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider" />
   </cxf:providers>
   </cxf:rsServer>
- 
+    <bean id="dataSource"
+        class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
+        <property name="driverClass" value="org.mariadb.jdbc.Driver" />
+        <property name="url" value="jdbc:mariadb://localhost:3306/demodb" />
+        <property name="username" value="demouser" />
+        <property name="password" value="password" />
+    </bean>
+     
  <!-- backend server                   -->
 <cxf:cxfEndpoint id="soapMessageEndpoint"
                  serviceClass="com.demo.ihis.ws.BackEndWebService"
@@ -67,19 +74,25 @@
     <removeHeaders pattern="operationName"/>
     <log message="${headers}"/>
     <log message="============="/>
-		      <to uri="bean:testBean?method=convert"/>
+	<to uri="bean:testBean?method=convert"/>
+    <wireTap uri="direct:tap"/>    
     
     <to uri="cxf:bean:soapMessageEndpoint" />    
-<!--     <to uri="direct:convert"/>
- -->  </route>
-  <route>
-    <from uri="direct:convert"/>
-    <log message="============="/>
-    <log message="${body}"/>
-    <log message="=============Call backend============="/>
-
-
   </route>
+
+  <route>
+    <from uri="direct:tap"/>
+    <log message="saving to db"/>
+    <setHeader headerName="payload">
+      <simple>${body}</simple>
+    </setHeader>
+    <setBody>
+      <constant>
+                      insert into audit (payload) values (:?payload);
+                    </constant>
+    </setBody>
+    <to uri="jdbc:dataSource?useHeadersAsParameters=true"/>
+  </route>  
 </camelContext>
 
 </beans>
