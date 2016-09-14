@@ -16,7 +16,7 @@
        <bean id="helloBean" class="com.demo.ihis.rest.RestServiceImpl" />
        
   <!-- Defined the server endpoint to create the cxf-rs consumer -->
-  <cxf:rsServer id="rsServer" address="http://localhost:8182"    
+  <cxf:rsServer id="rsServer" address="http://0.0.0.0:8182"    
     loggingFeatureEnabled="true" loggingSizeLimit="20" skipFaultLogging="true">
  <cxf:serviceBeans>
      <ref bean="helloBean" />
@@ -74,12 +74,14 @@
     <removeHeaders pattern="operationName"/>
     <log message="${headers}"/>
     <log message="============="/>
-	<to uri="bean:testBean?method=convert"/>
-    <wireTap uri="direct:tap"/>    
-    
-    <to uri="cxf:bean:soapMessageEndpoint" />    
+    <to uri="bean:testBean?method=convert"/>
+    <wireTap uri="direct:tap">
+      <body>
+        <simple></simple>
+      </body>
+    </wireTap>
+    <to uri="cxf:bean:soapMessageEndpoint"/>
   </route>
-
   <route>
     <from uri="direct:tap"/>
     <log message="saving to db"/>
@@ -92,7 +94,7 @@
                     </constant>
     </setBody>
     <to uri="jdbc:dataSource?useHeadersAsParameters=true"/>
-  </route>  
+  </route>
 </camelContext>
 
 </beans>
