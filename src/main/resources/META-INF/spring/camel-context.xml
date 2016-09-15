@@ -77,7 +77,7 @@
     <to uri="bean:testBean?method=convert"/>
     <wireTap uri="direct:tap">
       <body>
-        <simple></simple>
+        <simple>${body}</simple>
       </body>
     </wireTap>
     <to uri="cxf:bean:soapMessageEndpoint"/>
